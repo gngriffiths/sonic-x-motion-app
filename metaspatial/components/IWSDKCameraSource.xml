@@ -1,0 +1,21 @@
+<ComponentSchema packageName="com.iwsdk.components">
+  <Enum name="CameraFacing">
+    <EnumValue value="back"/>
+    <EnumValue value="front"/>
+    <EnumValue value="unknown"/>
+  </Enum>
+  <Enum name="CameraState">
+    <EnumValue value="inactive"/>
+    <EnumValue value="starting"/>
+    <EnumValue value="active"/>
+    <EnumValue value="error"/>
+  </Enum>
+  <Component name="CameraSource" description="Camera video source with texture output">
+    <StringAttribute name="deviceId" defaultValue=""/>
+    <EnumAttribute name="facing" defaultValue="CameraFacing.unknown"/>
+    <IntAttribute name="width" defaultValue="1920"/>
+    <IntAttribute name="height" defaultValue="1080"/>
+    <IntAttribute name="frameRate" defaultValue="30"/>
+    <EnumAttribute name="state" defaultValue="CameraState.inactive"/>
+  </Component>
+</ComponentSchema>

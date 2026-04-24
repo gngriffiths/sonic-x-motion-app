@@ -1,0 +1,12 @@
+<ComponentSchema packageName="com.iwsdk.components">
+  <Enum name="RaycastSpace">
+    <EnumValue value="left"/>
+    <EnumValue value="right"/>
+    <EnumValue value="viewer"/>
+    <EnumValue value="screen"/>
+  </Enum>
+  <Component name="EnvironmentRaycastTarget" description="Entity follows environment raycast hit points">
+    <EnumAttribute name="space" defaultValue="RaycastSpace.right"/>
+    <FloatAttribute name="maxDistance" defaultValue="100f"/>
+  </Component>
+</ComponentSchema>

@@ -1,0 +1,3 @@
+<ComponentSchema packageName="com.iwsdk.components">
+  <Component name="RayInteractable" description="Marks an entity as eligible for ray-based pointer interaction."/>
+</ComponentSchema>
