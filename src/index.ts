@@ -14,6 +14,7 @@ import {
 } from "@iwsdk/core";
 
 import { PanelSystem } from "./panel.js";
+import { PinchSphereSystem } from "./pinch-sphere.js";
 
 const assets: AssetManifest = {
   chimeSound: {
@@ -90,5 +91,5 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
    floor.rotation.x = -Math.PI / 2; // Rotate to be horizontal
    const floorEntity = world.createTransformEntity(floor);
 
-  world.registerSystem(PanelSystem);
+  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem);
 });
