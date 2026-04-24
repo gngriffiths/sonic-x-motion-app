@@ -6,37 +6,8 @@ entities:
         nodes:
         - ref:welcomePanel
         - ref:plantSansevieria
-        - ref:robot
     tag: Scene
   com.meta.models.SceneNode:
-  - components:
-      com.iwsdk.components.AudioSource:
-        maxInstances: 3
-        playbackMode: 3
-        src: /audio/chime.mp3
-      com.iwsdk.components.Interactable: {}
-      com.iwsdk.components.Robot: {}
-      com.meta.components.Animatable: {}
-      com.meta.components.DocumentReference:
-        transformType: None
-        documentReference: projref:robot/Main.metaspatialobj
-      com.meta.components.Name:
-        name: robot
-      com.meta.components.PointerNodeInverseComponent: {}
-      com.meta.components.SceneNode:
-        rotation.format: Euler
-        scale:
-        - 1
-        - 1
-        - 1
-        translation:
-        - -1.2000000476837158
-        - 0.40000000596046448
-        - -1.7999999523162842
-        componentVersion: 1
-      com.meta.components.Visibility:
-        visible: true
-    tag: robot
   - components:
       com.iwsdk.components.DistanceGrabbable:
         movementMode: 0
