@@ -8,10 +8,12 @@ import {
 import { compileUIKit } from "@iwsdk/vite-plugin-uikitml";
 import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
+import { oscBridgePlugin } from "./osc-bridge-plugin.js";
 
 export default defineConfig({
   plugins: [
     mkcert(),
+    oscBridgePlugin(),
     iwsdkDev({
       emulator: {
         device: "metaQuest3",
