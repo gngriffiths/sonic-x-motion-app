@@ -12,8 +12,6 @@ import {
   VisibilityState,
   World,
   BoxGeometry,
-  SphereGeometry,
-  MeshStandardMaterial,
 } from "@iwsdk/core";
 
 import { PanelSystem } from "./panel.js";
@@ -30,6 +28,9 @@ const assets: AssetManifest = {
     type: AssetType.Texture,
     priority: "critical",
   },
+  bass: { url: "/gltf/instruments/bass.glb", type: AssetType.GLTF },
+  drums: { url: "/gltf/instruments/drums.glb", type: AssetType.GLTF },
+  keyboard: { url: "/gltf/instruments/keyboard.glb", type: AssetType.GLTF },
 };
 
 function createGridTexture(): CanvasTexture {
@@ -115,27 +116,20 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   logoBanner.position.set(0, 1, 1.8);
   logoBanner.rotateY(Math.PI);
 
-// Create a red cube
-   const cubeGeometry = new BoxGeometry(1, 1, 1);
-   const redMaterial = new MeshStandardMaterial({ color: 0xff3333 });
-   const cube = new Mesh(cubeGeometry, redMaterial);
-   cube.position.set(-1, 0, -2);
-   const cubeEntity = world.createTransformEntity(cube);
+  // Place instruments in an arc at head height
+  const bassGltf = AssetManager.getGLTF('bass')!;
+  bassGltf.scene.position.set(-2, 1.6, -2);
+  bassGltf.scene.rotation.y = Math.PI / 8;
+  world.createTransformEntity(bassGltf.scene);
 
-   // Create a green sphere
-   const sphereGeometry = new SphereGeometry(0.5, 32, 32);
-   const greenMaterial = new MeshStandardMaterial({ color: 0x33ff33 });
-   const sphere = new Mesh(sphereGeometry, greenMaterial);
-   sphere.position.set(1, 0, -2);
-   const sphereEntity = world.createTransformEntity(sphere);
+  const drumsGltf = AssetManager.getGLTF('drums')!;
+  drumsGltf.scene.position.set(0, 1.6, -2.5);
+  world.createTransformEntity(drumsGltf.scene);
 
-   // Create a blue floor plane
-   const floorGeometry = new PlaneGeometry(4, 4);
-   const blueMaterial = new MeshStandardMaterial({ color: 0x3333ff });
-   const floor = new Mesh(floorGeometry, blueMaterial);
-   floor.position.set(0, -1, -2);
-   floor.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-   const floorEntity = world.createTransformEntity(floor);
+  const keyboardGltf = AssetManager.getGLTF('keyboard')!;
+  keyboardGltf.scene.position.set(2, 1.6, -2);
+  keyboardGltf.scene.rotation.y = -Math.PI / 8;
+  world.createTransformEntity(keyboardGltf.scene);
 
   world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem);
 });
