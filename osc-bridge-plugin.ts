@@ -35,13 +35,17 @@ export function oscBridgePlugin(): Plugin {
 
         ws.on('message', (data) => {
           try {
-            const { hand, x, y, z } = JSON.parse(data.toString()) as {
-              hand: 'left' | 'right';
-              x: number;
-              y: number;
-              z: number;
-            };
+            const msg = JSON.parse(data.toString()) as Record<string, unknown>;
 
+            // Instrument volume control: { type: 'instrument_volume', track, volume }
+            if (msg.type === 'instrument_volume') {
+              const { track, volume } = msg as { track: number; volume: number };
+              sendOSC('/live/track/set/volume', track, volume);
+              return;
+            }
+
+            // Fist-gesture XYZ control: { hand, x, y, z }
+            const { hand, x, y, z } = msg as { hand: 'left' | 'right'; x: number; y: number; z: number };
             const track = hand === 'left' ? 0 : 1;
 
             // X → panning (-1 to 1 maps directly)

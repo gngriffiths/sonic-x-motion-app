@@ -1,3 +1,5 @@
 <ComponentSchema packageName="com.iwsdk.components">
-  <Component name="InstrumentTag" description="EliCS component: InstrumentTag"/>
+  <Component name="InstrumentTag" description="EliCS component: InstrumentTag">
+    <IntAttribute name="trackIndex" defaultValue="0"/>
+  </Component>
 </ComponentSchema>

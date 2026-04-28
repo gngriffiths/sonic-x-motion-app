@@ -5,10 +5,16 @@ import {
   Pressed,
   RayInteractable,
   Transform,
+  Types,
 } from "@iwsdk/core";
 
-/** Marker component added to all instrument entities. */
-export const InstrumentTag = createComponent('InstrumentTag', {});
+/** drums=0, bass=1, keyboard=2 — matches Ableton track index (0-based). */
+export const InstrumentTag = createComponent('InstrumentTag', {
+  trackIndex: { type: Types.Int32, default: 0 },
+});
+
+/** Tag present on the currently selected instrument entity. */
+export const InstrumentSelected = createComponent('InstrumentSelected', {});
 
 export class InstrumentSelectSystem extends createSystem({
   /** All instruments — needed to deselect others. */
@@ -29,15 +35,18 @@ export class InstrumentSelectSystem extends createSystem({
       if (this.selectedEntity?.index === entity.index) {
         // Pressing the already-selected instrument — deselect it
         this.setScale(entity, 1);
+        entity.removeComponent(InstrumentSelected);
         this.selectedEntity = null;
       } else {
         // Deselect the previous selection
         if (this.selectedEntity !== null) {
           this.setScale(this.selectedEntity, 1);
+          this.selectedEntity.removeComponent(InstrumentSelected);
         }
         // Select the new one
         this.selectedEntity = entity;
         this.setScale(entity, 2);
+        entity.addComponent(InstrumentSelected);
       }
     });
   }
