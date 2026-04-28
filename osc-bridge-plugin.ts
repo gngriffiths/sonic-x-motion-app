@@ -44,9 +44,9 @@ export function oscBridgePlugin(): Plugin {
               return;
             }
 
-            // Fist-gesture XYZ control: { hand, x, y, z }
-            const { hand, x, y, z } = msg as { hand: 'left' | 'right'; x: number; y: number; z: number };
-            const track = hand === 'left' ? 0 : 1;
+            // Fist-gesture XYZ control: { hand, track, x, y, z }
+            const { hand, track: msgTrack, x, y, z } = msg as { hand: 'left' | 'right'; track: number; x: number; y: number; z: number };
+            const track = (msgTrack !== undefined && msgTrack >= 0) ? msgTrack : (hand === 'left' ? 0 : 1);
 
             // X → panning (-1 to 1 maps directly)
             sendOSC('/live/track/set/panning', track, x);

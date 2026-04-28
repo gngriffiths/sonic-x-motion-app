@@ -6,6 +6,7 @@ import {
   SphereGeometry,
   Vector3,
 } from "@iwsdk/core";
+import { InstrumentTag, InstrumentSelected } from "./instrument-select.js";
 
 /** Movement range in metres from fist origin that maps to +/-1.0 on each axis. */
 const RANGE_M = 0.5;
@@ -28,7 +29,9 @@ const FINGERTIP_JOINTS = [
   'pinky-finger-tip',
 ] as const;
 
-export class PinchSphereSystem extends createSystem({}) {
+export class PinchSphereSystem extends createSystem({
+  selectedInstrument: { required: [InstrumentTag, InstrumentSelected] },
+}) {
   private leftSphere!: Mesh;
   private rightSphere!: Mesh;
 
@@ -120,7 +123,11 @@ export class PinchSphereSystem extends createSystem({}) {
 
   private sendOSC(hand: 'left' | 'right', x: number, y: number, z: number): void {
     if (this.ws.readyState !== WebSocket.OPEN) return;
-    this.ws.send(JSON.stringify({ hand, x, y, z }));
+    const selected = this.queries.selectedInstrument.entities.values().next().value;
+    const track = selected !== undefined
+      ? (selected.getValue(InstrumentTag, 'trackIndex') as number)
+      : -1;
+    this.ws.send(JSON.stringify({ hand, track, x, y, z }));
   }
 
   update() {
