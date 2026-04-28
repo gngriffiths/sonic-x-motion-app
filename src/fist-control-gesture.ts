@@ -1,17 +1,32 @@
 import {
   createSystem,
+  InputComponent,
   Mesh,
   MeshStandardMaterial,
   SphereGeometry,
   Vector3,
 } from "@iwsdk/core";
 
-/** Movement range in metres from pinch origin that maps to +/-1.0 on each axis. */
+/** Movement range in metres from fist origin that maps to +/-1.0 on each axis. */
 const RANGE_M = 0.5;
 
 /** WebSocket URL -- derived from window.location so it works both on the local
  *  browser (localhost) and on a Meta Quest connected via LAN (PC's IP address). */
 const WS_URL = `wss://${window.location.host}/osc-bridge`;
+
+/**
+ * Distance (metres) from wrist to fingertip below which a finger counts as
+ * "curled". Open hand ~14-18 cm, closed fist ~4-8 cm.
+ */
+const FIST_CURL_THRESHOLD = 0.085;
+const FIST_FINGER_COUNT = 3; // require at least 3 of 4 fingers curled
+
+const FINGERTIP_JOINTS = [
+  'index-finger-tip',
+  'middle-finger-tip',
+  'ring-finger-tip',
+  'pinky-finger-tip',
+] as const;
 
 export class PinchSphereSystem extends createSystem({}) {
   private leftSphere!: Mesh;
@@ -23,8 +38,8 @@ export class PinchSphereSystem extends createSystem({}) {
   private rightOrigin!: Vector3;
   private delta!: Vector3;
 
-  private leftPinching = false;
-  private rightPinching = false;
+  private leftFisting = false;
+  private rightFisting = false;
 
   private ws!: WebSocket;
 
@@ -57,13 +72,50 @@ export class PinchSphereSystem extends createSystem({}) {
 
     this.ws = new WebSocket(WS_URL);
     this.ws.addEventListener('open', () =>
-      console.log('[PinchSphereSystem] OSC bridge connected'),
+      console.log('[FistControlGesture] OSC bridge connected'),
     );
     this.ws.addEventListener('error', (e) =>
-      console.warn('[PinchSphereSystem] OSC bridge error', e),
+      console.warn('[FistControlGesture] OSC bridge error', e),
     );
 
     this.cleanupFuncs.push(() => this.ws.close());
+  }
+
+  /**
+   * Returns true when the hand is in a fist using WebXR joint poses.
+   * Falls back to the controller Squeeze button when not in hand-tracking mode.
+   */
+  private isFisting(side: 'left' | 'right'): boolean {
+    const gamepad = this.input.gamepads[side];
+    if (!gamepad) return false;
+
+    const hand = gamepad.inputSource.hand as XRHand | undefined;
+
+    if (hand) {
+      // Hand-tracking mode: measure fingertip-to-wrist distances
+      const frame = this.world.renderer.xr.getFrame() as XRFrame | null;
+      const refSpace = this.world.renderer.xr.getReferenceSpace() as XRReferenceSpace | null;
+      if (!frame?.getJointPose || !refSpace) return false;
+
+      const wristSpace = hand.get('wrist' as XRHandJoint);
+      if (!wristSpace) return false;
+
+      let curled = 0;
+      for (const jointName of FINGERTIP_JOINTS) {
+        const tipSpace = hand.get(jointName as XRHandJoint);
+        if (!tipSpace) continue;
+        const pose = frame.getJointPose(tipSpace, wristSpace);
+        if (!pose) continue;
+        const { x, y, z } = pose.transform.position;
+        if (x * x + y * y + z * z < FIST_CURL_THRESHOLD * FIST_CURL_THRESHOLD) {
+          curled++;
+        }
+      }
+      return curled >= FIST_FINGER_COUNT;
+    }
+
+    // Controller mode: use physical Squeeze/grip button
+    return gamepad.getButtonPressed(InputComponent.Squeeze);
   }
 
   private sendOSC(hand: 'left' | 'right', x: number, y: number, z: number): void {
@@ -73,13 +125,12 @@ export class PinchSphereSystem extends createSystem({}) {
 
   update() {
     // -- Left hand
-    const leftGamepad = this.input.gamepads.left;
-    const leftSelecting = leftGamepad?.getSelecting() ?? false;
+    const leftFisting = this.isFisting('left');
 
-    if (leftSelecting) {
-      this.player.indexTipSpaces.left.getWorldPosition(this.pos);
+    if (leftFisting) {
+      this.player.gripSpaces.left.getWorldPosition(this.pos);
 
-      if (!this.leftPinching) {
+      if (!this.leftFisting) {
         this.leftOrigin.copy(this.pos);
       }
 
@@ -94,21 +145,20 @@ export class PinchSphereSystem extends createSystem({}) {
         Math.max(-1, Math.min(1, this.delta.z)),
       );
     } else {
-      if (this.leftPinching) {
+      if (this.leftFisting) {
         this.sendOSC('left', 0, 0, 0);
       }
       this.leftSphere.visible = false;
     }
-    this.leftPinching = leftSelecting;
+    this.leftFisting = leftFisting;
 
     // -- Right hand
-    const rightGamepad = this.input.gamepads.right;
-    const rightSelecting = rightGamepad?.getSelecting() ?? false;
+    const rightFisting = this.isFisting('right');
 
-    if (rightSelecting) {
-      this.player.indexTipSpaces.right.getWorldPosition(this.pos);
+    if (rightFisting) {
+      this.player.gripSpaces.right.getWorldPosition(this.pos);
 
-      if (!this.rightPinching) {
+      if (!this.rightFisting) {
         this.rightOrigin.copy(this.pos);
       }
 
@@ -123,11 +173,11 @@ export class PinchSphereSystem extends createSystem({}) {
         Math.max(-1, Math.min(1, this.delta.z)),
       );
     } else {
-      if (this.rightPinching) {
+      if (this.rightFisting) {
         this.sendOSC('right', 0, 0, 0);
       }
       this.rightSphere.visible = false;
     }
-    this.rightPinching = rightSelecting;
+    this.rightFisting = rightFisting;
   }
 }

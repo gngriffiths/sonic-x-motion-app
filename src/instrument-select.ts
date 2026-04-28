@@ -1,6 +1,7 @@
 import {
   createComponent,
   createSystem,
+  Entity,
   Pressed,
   RayInteractable,
   Transform,
@@ -10,24 +11,33 @@ import {
 export const InstrumentTag = createComponent('InstrumentTag', {});
 
 export class InstrumentSelectSystem extends createSystem({
+  /** All instruments — needed to deselect others. */
+  instruments: { required: [InstrumentTag, RayInteractable] },
   /** Instruments that are currently being pressed (ray + pinch/trigger). */
   pressed: { required: [InstrumentTag, RayInteractable, Pressed] },
 }) {
-  /** Tracks which entity indices are currently scaled up. */
-  private readonly selected = new Set<number>();
+  /** The single currently-selected entity, or null. */
+  private selectedEntity: Entity | null = null;
+
+  private setScale(entity: Entity, s: number) {
+    const scale = entity.getVectorView(Transform, 'scale') as Float32Array;
+    scale[0] = s; scale[1] = s; scale[2] = s;
+  }
 
   init() {
-    // qualify fires once when the press starts — use it as the "click" moment
     this.queries.pressed.subscribe('qualify', (entity) => {
-      const scale = entity.getVectorView(Transform, 'scale') as Float32Array;
-      if (this.selected.has(entity.index)) {
-        // Already selected — deselect and restore scale
-        this.selected.delete(entity.index);
-        scale[0] = 1; scale[1] = 1; scale[2] = 1;
+      if (this.selectedEntity?.index === entity.index) {
+        // Pressing the already-selected instrument — deselect it
+        this.setScale(entity, 1);
+        this.selectedEntity = null;
       } else {
-        // Select — scale up 2x
-        this.selected.add(entity.index);
-        scale[0] = 2; scale[1] = 2; scale[2] = 2;
+        // Deselect the previous selection
+        if (this.selectedEntity !== null) {
+          this.setScale(this.selectedEntity, 1);
+        }
+        // Select the new one
+        this.selectedEntity = entity;
+        this.setScale(entity, 2);
       }
     });
   }

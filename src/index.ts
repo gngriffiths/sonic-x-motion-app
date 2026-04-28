@@ -16,7 +16,7 @@ import {
 } from "@iwsdk/core";
 
 import { PanelSystem } from "./panel.js";
-import { PinchSphereSystem } from "./pinch-sphere.js";
+import { PinchSphereSystem } from "./fist-control-gesture.js";
 import { InstrumentTag, InstrumentSelectSystem } from "./instrument-select.js";
 
 const assets: AssetManifest = {
