@@ -44,6 +44,18 @@ export class PinchSphereSystem extends createSystem({
   private leftFisting = false;
   private rightFisting = false;
 
+  /** Persisted volume (0–1) per track index, so gestures resume from last position. */
+  private trackVolumes: Map<number, number> = new Map();
+  /** Volume at the moment each fist was formed — gesture delta is added to this. */
+  private leftBaseVolume = 0.5;
+  private rightBaseVolume = 0.5;
+  /** Track index captured at fist-start, used to save volume on release. */
+  private leftTrackAtStart = -1;
+  private rightTrackAtStart = -1;
+  /** Running accumulated volume for each active fist. */
+  private leftCurrentVolume = 0.5;
+  private rightCurrentVolume = 0.5;
+
   private ws!: WebSocket;
 
   init() {
@@ -121,13 +133,17 @@ export class PinchSphereSystem extends createSystem({
     return gamepad.getButtonPressed(InputComponent.Squeeze);
   }
 
-  private sendOSC(hand: 'left' | 'right', x: number, y: number, z: number): void {
-    if (this.ws.readyState !== WebSocket.OPEN) return;
+  private getSelectedTrack(): number {
     const selected = this.queries.selectedInstrument.entities.values().next().value;
-    const track = selected !== undefined
+    return selected !== undefined
       ? (selected.getValue(InstrumentTag, 'trackIndex') as number)
       : -1;
-    this.ws.send(JSON.stringify({ hand, track, x, y, z }));
+  }
+
+  private sendOSC(hand: 'left' | 'right', x: number, y: number, z: number, volume: number): void {
+    if (this.ws.readyState !== WebSocket.OPEN) return;
+    const track = this.getSelectedTrack();
+    this.ws.send(JSON.stringify({ hand, track, x, y, z, volume }));
   }
 
   update() {
@@ -139,21 +155,25 @@ export class PinchSphereSystem extends createSystem({
 
       if (!this.leftFisting) {
         this.leftOrigin.copy(this.pos);
+        this.leftTrackAtStart = this.getSelectedTrack();
+        this.leftBaseVolume = this.trackVolumes.get(this.leftTrackAtStart) ?? 0.5;
       }
 
       this.leftSphere.position.copy(this.pos);
       this.leftSphere.visible = true;
 
       this.delta.subVectors(this.pos, this.leftOrigin).divideScalar(RANGE_M);
+      this.leftCurrentVolume = Math.max(0, Math.min(1, this.leftBaseVolume + this.delta.y));
       this.sendOSC(
         'left',
         Math.max(-1, Math.min(1, this.delta.x)),
         Math.max(-1, Math.min(1, this.delta.y)),
         Math.max(-1, Math.min(1, this.delta.z)),
+        this.leftCurrentVolume,
       );
     } else {
-      if (this.leftFisting) {
-        this.sendOSC('left', 0, 0, 0);
+      if (this.leftFisting && this.leftTrackAtStart >= 0) {
+        this.trackVolumes.set(this.leftTrackAtStart, this.leftCurrentVolume);
       }
       this.leftSphere.visible = false;
     }
@@ -167,21 +187,25 @@ export class PinchSphereSystem extends createSystem({
 
       if (!this.rightFisting) {
         this.rightOrigin.copy(this.pos);
+        this.rightTrackAtStart = this.getSelectedTrack();
+        this.rightBaseVolume = this.trackVolumes.get(this.rightTrackAtStart) ?? 0.5;
       }
 
       this.rightSphere.position.copy(this.pos);
       this.rightSphere.visible = true;
 
       this.delta.subVectors(this.pos, this.rightOrigin).divideScalar(RANGE_M);
+      this.rightCurrentVolume = Math.max(0, Math.min(1, this.rightBaseVolume + this.delta.y));
       this.sendOSC(
         'right',
         Math.max(-1, Math.min(1, this.delta.x)),
         Math.max(-1, Math.min(1, this.delta.y)),
         Math.max(-1, Math.min(1, this.delta.z)),
+        this.rightCurrentVolume,
       );
     } else {
-      if (this.rightFisting) {
-        this.sendOSC('right', 0, 0, 0);
+      if (this.rightFisting && this.rightTrackAtStart >= 0) {
+        this.trackVolumes.set(this.rightTrackAtStart, this.rightCurrentVolume);
       }
       this.rightSphere.visible = false;
     }

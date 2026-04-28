@@ -45,14 +45,14 @@ export function oscBridgePlugin(): Plugin {
             }
 
             // Fist-gesture XYZ control: { hand, track, x, y, z }
-            const { hand, track: msgTrack, x, y, z } = msg as { hand: 'left' | 'right'; track: number; x: number; y: number; z: number };
+            const { hand, track: msgTrack, x, y, z, volume } = msg as { hand: 'left' | 'right'; track: number; x: number; y: number; z: number; volume?: number };
             const track = (msgTrack !== undefined && msgTrack >= 0) ? msgTrack : (hand === 'left' ? 0 : 1);
 
             // X → panning (-1 to 1 maps directly)
             sendOSC('/live/track/set/panning', track, x);
 
-            // Y → volume (remap -1..1 to 0..1)
-            sendOSC('/live/track/set/volume', track, (y + 1) / 2);
+            // Volume: use pre-computed absolute value when present, else derive from Y
+            sendOSC('/live/track/set/volume', track, volume !== undefined ? volume : (y + 1) / 2);
 
             // Z → send 0 level (remap -1..1 to 0..1)
             sendOSC('/live/track/set/send', track, 0, (z + 1) / 2);
