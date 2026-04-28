@@ -119,18 +119,18 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   logoBanner.rotateY(Math.PI);
 
   // Place instruments in an arc at head height
-  const bassGltf = AssetManager.getGLTF('bass')!;
-  bassGltf.scene.position.set(-2, 1.6, -2);
-  bassGltf.scene.rotation.y = Math.PI / 8;
-  const bassEntity = world.createTransformEntity(bassGltf.scene);
-  bassEntity.addComponent(RayInteractable);
-  bassEntity.addComponent(InstrumentTag, { trackIndex: 1 });
-
   const drumsGltf = AssetManager.getGLTF('drums')!;
-  drumsGltf.scene.position.set(0, 1.6, -2.5);
+  drumsGltf.scene.position.set(-2, 1.6, -2);
+  drumsGltf.scene.rotation.y = Math.PI / 8;
   const drumsEntity = world.createTransformEntity(drumsGltf.scene);
   drumsEntity.addComponent(RayInteractable);
   drumsEntity.addComponent(InstrumentTag, { trackIndex: 0 });
+
+  const bassGltf = AssetManager.getGLTF('bass')!;
+  bassGltf.scene.position.set(0, 1.6, -2.5);
+  const bassEntity = world.createTransformEntity(bassGltf.scene);
+  bassEntity.addComponent(RayInteractable);
+  bassEntity.addComponent(InstrumentTag, { trackIndex: 1 });
 
   const keyboardGltf = AssetManager.getGLTF('keyboard')!;
   keyboardGltf.scene.position.set(2, 1.6, -2);

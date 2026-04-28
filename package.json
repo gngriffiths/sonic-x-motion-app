@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "init-ableton": "tsx scripts/init-ableton.ts"
   },
   "dependencies": {
     "@iwsdk/core": "0.3.1",
@@ -22,6 +23,7 @@
     "@types/three": "*",
     "@types/ws": "^8.18.1",
     "node-osc": "^11.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.5.0",
     "vite": "^7.1.4",
     "vite-plugin-mkcert": "^1.17.0",

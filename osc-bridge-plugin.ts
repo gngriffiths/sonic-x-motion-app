@@ -7,6 +7,13 @@ import { Client, Message } from 'node-osc';
 const ABLETON_HOST = '127.0.0.1';
 const ABLETON_PORT = 11000;
 
+const INIT_TRACKS = [
+  { name: 'drums',    index: 0 },
+  { name: 'bass',     index: 1 },
+  { name: 'keyboard', index: 2 },
+];
+const INIT_VOLUME = 0;
+
 export function oscBridgePlugin(): Plugin {
   return {
     name: 'osc-bridge',
@@ -32,6 +39,11 @@ export function oscBridgePlugin(): Plugin {
 
       wss.on('connection', (ws) => {
         console.log('\x1b[36m[osc-bridge]\x1b[0m client connected');
+
+        for (const track of INIT_TRACKS) {
+          sendOSC('/live/track/set/volume', track.index, INIT_VOLUME);
+        }
+        console.log('\x1b[36m[osc-bridge]\x1b[0m Ableton tracks initialised (volume → 0)');
 
         ws.on('message', (data) => {
           try {
