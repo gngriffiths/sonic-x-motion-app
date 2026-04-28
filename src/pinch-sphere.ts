@@ -9,8 +9,9 @@ import {
 /** Movement range in metres from pinch origin that maps to +/-1.0 on each axis. */
 const RANGE_M = 0.5;
 
-/** WebSocket URL -- piggybacks on the Vite dev-server via the osc-bridge-plugin. */
-const WS_URL = 'wss://localhost:8081/osc-bridge';
+/** WebSocket URL -- derived from window.location so it works both on the local
+ *  browser (localhost) and on a Meta Quest connected via LAN (PC's IP address). */
+const WS_URL = `wss://${window.location.host}/osc-bridge`;
 
 export class PinchSphereSystem extends createSystem({}) {
   private leftSphere!: Mesh;
