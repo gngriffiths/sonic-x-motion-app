@@ -6,6 +6,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
+  RayInteractable,
   SessionMode,
   SRGBColorSpace,
   AssetManager,
@@ -16,6 +17,7 @@ import {
 
 import { PanelSystem } from "./panel.js";
 import { PinchSphereSystem } from "./pinch-sphere.js";
+import { InstrumentTag, InstrumentSelectSystem } from "./instrument-select.js";
 
 const assets: AssetManifest = {
   chimeSound: {
@@ -120,16 +122,22 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const bassGltf = AssetManager.getGLTF('bass')!;
   bassGltf.scene.position.set(-2, 1.6, -2);
   bassGltf.scene.rotation.y = Math.PI / 8;
-  world.createTransformEntity(bassGltf.scene);
+  const bassEntity = world.createTransformEntity(bassGltf.scene);
+  bassEntity.addComponent(RayInteractable);
+  bassEntity.addComponent(InstrumentTag);
 
   const drumsGltf = AssetManager.getGLTF('drums')!;
   drumsGltf.scene.position.set(0, 1.6, -2.5);
-  world.createTransformEntity(drumsGltf.scene);
+  const drumsEntity = world.createTransformEntity(drumsGltf.scene);
+  drumsEntity.addComponent(RayInteractable);
+  drumsEntity.addComponent(InstrumentTag);
 
   const keyboardGltf = AssetManager.getGLTF('keyboard')!;
   keyboardGltf.scene.position.set(2, 1.6, -2);
   keyboardGltf.scene.rotation.y = -Math.PI / 8;
-  world.createTransformEntity(keyboardGltf.scene);
+  const keyboardEntity = world.createTransformEntity(keyboardGltf.scene);
+  keyboardEntity.addComponent(RayInteractable);
+  keyboardEntity.addComponent(InstrumentTag);
 
-  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem);
+  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem).registerSystem(InstrumentSelectSystem);
 });
