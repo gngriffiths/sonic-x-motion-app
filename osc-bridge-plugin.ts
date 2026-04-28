@@ -60,6 +60,9 @@ export function oscBridgePlugin(): Plugin {
             const { hand, track: msgTrack, x, y, z, volume } = msg as { hand: 'left' | 'right'; track: number; x: number; y: number; z: number; volume?: number };
             const track = (msgTrack !== undefined && msgTrack >= 0) ? msgTrack : (hand === 'left' ? 0 : 1);
 
+            // No instrument selected — ignore gesture entirely
+            if (msgTrack === undefined || msgTrack < 0) return;
+
             // X → panning (-1 to 1 maps directly)
             sendOSC('/live/track/set/panning', track, x);
 

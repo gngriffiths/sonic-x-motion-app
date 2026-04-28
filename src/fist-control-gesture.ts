@@ -64,6 +64,11 @@ export class PinchSphereSystem extends createSystem({
     this.rightOrigin = new Vector3();
     this.delta = new Vector3();
 
+    // Match Ableton's initial state set by the OSC bridge on page load
+    this.trackVolumes.set(0, 0);
+    this.trackVolumes.set(1, 0);
+    this.trackVolumes.set(2, 0);
+
     const geo = new SphereGeometry(0.015, 16, 16);
     const mat = new MeshStandardMaterial({
       color: 0xff7700,
@@ -156,7 +161,7 @@ export class PinchSphereSystem extends createSystem({
       if (!this.leftFisting) {
         this.leftOrigin.copy(this.pos);
         this.leftTrackAtStart = this.getSelectedTrack();
-        this.leftBaseVolume = this.trackVolumes.get(this.leftTrackAtStart) ?? 0.5;
+        this.leftBaseVolume = this.trackVolumes.get(this.leftTrackAtStart) ?? 0;
       }
 
       this.leftSphere.position.copy(this.pos);
@@ -188,7 +193,7 @@ export class PinchSphereSystem extends createSystem({
       if (!this.rightFisting) {
         this.rightOrigin.copy(this.pos);
         this.rightTrackAtStart = this.getSelectedTrack();
-        this.rightBaseVolume = this.trackVolumes.get(this.rightTrackAtStart) ?? 0.5;
+        this.rightBaseVolume = this.trackVolumes.get(this.rightTrackAtStart) ?? 0;
       }
 
       this.rightSphere.position.copy(this.pos);

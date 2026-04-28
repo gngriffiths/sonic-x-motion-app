@@ -121,7 +121,7 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   // Place instruments in an arc at head height
   const drumsGltf = AssetManager.getGLTF('drums')!;
   drumsGltf.scene.position.set(-2, 1.6, -2);
-  drumsGltf.scene.rotation.y = Math.PI / 8;
+  drumsGltf.scene.rotation.y = Math.PI / 4;
   const drumsEntity = world.createTransformEntity(drumsGltf.scene);
   drumsEntity.addComponent(RayInteractable);
   drumsEntity.addComponent(InstrumentTag, { trackIndex: 0 });
