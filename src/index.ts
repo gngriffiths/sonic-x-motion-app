@@ -50,7 +50,6 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     sceneUnderstanding: true,
     environmentRaycast: true,
   },
-  level: "./glxf/Composition.glxf",
 }).then((world) => {
   const { camera } = world;
 
