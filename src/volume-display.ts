@@ -99,9 +99,10 @@ export class VolumeDisplaySystem extends createSystem({
       this.materials.set(trackIndex, mat);
 
       const mesh = new Mesh(new PlaneGeometry(METER_W, METER_H), mat);
-      // Set position BEFORE createTransformEntity — the Transform component defaults to
-      // [NaN,NaN,NaN] which causes attachToEntity to copy from mesh.position automatically.
+      // Set transform BEFORE createTransformEntity — the Transform component defaults to
+      // [NaN,NaN,NaN] which causes attachToEntity to copy from mesh values automatically.
       mesh.position.set(obj.position.x, obj.position.y - 0.7, obj.position.z);
+      mesh.rotation.y = obj.rotation.y;
       this.world.createTransformEntity(mesh, { parent: this.world.sceneEntity, persistent: true });
     };
 
