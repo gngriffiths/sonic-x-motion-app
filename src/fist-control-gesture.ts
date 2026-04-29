@@ -240,8 +240,8 @@ const CLAP_COOLDOWN = 0.9;
 const PARTICLE_SIZE = 0.04;
 
 const BURST_COLORS: [number, number, number][] = [
-  [0.78, 0.78, 0.78], // grey
-  [1.0, 1.0, 1.0],    // white
+  [1.0, 0.97, 0.88],  // cream
+  [0.22, 0.22, 0.22], // dark grey
   [0.65, 0.15, 0.95], // purple
   [1.0, 0.88, 0.1],   // yellow
 ];
@@ -297,7 +297,6 @@ export class ClapParticleSystem extends createSystem({}) {
       transparent: true,
       depthWrite: false,
       blending: AdditiveBlending,
-      vertexColors: true,
     });
     this.mesh = new InstancedMesh(new PlaneGeometry(1, 1), mat, CLAP_MAX);
     this.mesh.frustumCulled = false;
