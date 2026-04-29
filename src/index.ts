@@ -16,6 +16,7 @@ import {
 import { PanelSystem } from "./panel.js";
 import { JediForceYankSystem } from "./jedi-force-yank-gesture.js";
 import { ClapParticleSystem } from "./clap-particle-system.js";
+import { BloomGestureSystem } from "./bloom-gesture.js";
 import { InstrumentTag } from "./instrument-select.js";
 import { VolumeDisplaySystem } from "./volume-display.js";
 
@@ -132,5 +133,5 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   keyboardEntity.addComponent(RayInteractable);
   keyboardEntity.addComponent(InstrumentTag, { trackIndex: 2 });
 
-  world.registerSystem(PanelSystem).registerSystem(JediForceYankSystem).registerSystem(VolumeDisplaySystem).registerSystem(ClapParticleSystem);
+  world.registerSystem(PanelSystem).registerSystem(JediForceYankSystem).registerSystem(VolumeDisplaySystem).registerSystem(ClapParticleSystem).registerSystem(BloomGestureSystem);
 });
