@@ -1,8 +1,8 @@
 import type { IncomingMessage } from 'http';
 import type { Duplex } from 'stream';
 import type { Plugin } from 'vite';
-import { WebSocketServer } from 'ws';
-import { Client, Message } from 'node-osc';
+import { WebSocketServer, WebSocket } from 'ws';
+import { Client, Message, Server } from 'node-osc';
 
 const ABLETON_HOST = '127.0.0.1';
 const ABLETON_PORT = 11000;
@@ -13,6 +13,7 @@ const INIT_TRACKS = [
   { name: 'keyboard', index: 2 },
 ];
 const INIT_VOLUME = 0;
+const BRIDGE_RECEIVE_PORT = 11001;
 
 export function oscBridgePlugin(): Plugin {
   return {
@@ -20,6 +21,28 @@ export function oscBridgePlugin(): Plugin {
     configureServer(server) {
       const oscClient = new Client(ABLETON_HOST, ABLETON_PORT);
       const wss = new WebSocketServer({ noServer: true });
+
+      const trackVolumes = new Map<number, number>(
+        INIT_TRACKS.map(t => [t.index, INIT_VOLUME]),
+      );
+
+      function broadcast(payload: string): void {
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) client.send(payload);
+        });
+      }
+
+      // OSC server — receives volume feedback from AbletonOSC on port 11001
+      const oscServer = new Server(BRIDGE_RECEIVE_PORT, '0.0.0.0');
+      oscServer.on('message', (msg: unknown[]) => {
+        const [address, ...args] = msg as [string, ...unknown[]];
+        if (address === '/live/track/get/volume' && args.length >= 2) {
+          const track = args[0] as number;
+          const volume = args[1] as number;
+          trackVolumes.set(track, volume);
+          broadcast(JSON.stringify({ type: 'volume_update', track, volume }));
+        }
+      });
 
       function sendOSC(address: string, ...args: Array<string | number | boolean>): void {
         const msg = new Message(address);
@@ -45,6 +68,16 @@ export function oscBridgePlugin(): Plugin {
         }
         console.log('\x1b[36m[osc-bridge]\x1b[0m Ableton tracks initialised (volume → 0)');
 
+        // Subscribe to continuous volume feedback from AbletonOSC
+        for (const track of INIT_TRACKS) {
+          sendOSC('/live/track/start_listen/volume', track.index);
+        }
+
+        // Send current volume state to the newly connected client
+        for (const [track, volume] of trackVolumes) {
+          ws.send(JSON.stringify({ type: 'volume_update', track, volume }));
+        }
+
         ws.on('message', (data) => {
           try {
             const msg = JSON.parse(data.toString()) as Record<string, unknown>;
@@ -53,6 +86,8 @@ export function oscBridgePlugin(): Plugin {
             if (msg.type === 'instrument_volume') {
               const { track, volume } = msg as { track: number; volume: number };
               sendOSC('/live/track/set/volume', track, volume);
+              trackVolumes.set(track, volume);
+              broadcast(JSON.stringify({ type: 'volume_update', track, volume }));
               return;
             }
 
@@ -67,7 +102,10 @@ export function oscBridgePlugin(): Plugin {
             sendOSC('/live/track/set/panning', track, x);
 
             // Volume: use pre-computed absolute value when present, else derive from Y
-            sendOSC('/live/track/set/volume', track, volume !== undefined ? volume : (y + 1) / 2);
+            const absVolume = volume !== undefined ? volume : (y + 1) / 2;
+            sendOSC('/live/track/set/volume', track, absVolume);
+            trackVolumes.set(track, absVolume);
+            broadcast(JSON.stringify({ type: 'volume_update', track, volume: absVolume }));
 
             // Z → send 0 level (remap -1..1 to 0..1)
             sendOSC('/live/track/set/send', track, 0, (z + 1) / 2);

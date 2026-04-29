@@ -16,6 +16,7 @@ import {
 import { PanelSystem } from "./panel.js";
 import { PinchSphereSystem } from "./fist-control-gesture.js";
 import { InstrumentTag, InstrumentSelectSystem } from "./instrument-select.js";
+import { VolumeDisplaySystem } from "./volume-display.js";
 
 const assets: AssetManifest = {
   chimeSound: {
@@ -130,5 +131,5 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   keyboardEntity.addComponent(RayInteractable);
   keyboardEntity.addComponent(InstrumentTag, { trackIndex: 2 });
 
-  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem).registerSystem(InstrumentSelectSystem);
+  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem).registerSystem(InstrumentSelectSystem).registerSystem(VolumeDisplaySystem);
 });
