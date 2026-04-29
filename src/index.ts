@@ -5,10 +5,8 @@ import {
   CanvasTexture,
   Mesh,
   MeshBasicMaterial,
-  PlaneGeometry,
   RayInteractable,
   SessionMode,
-  SRGBColorSpace,
   AssetManager,
   VisibilityState,
   World,
@@ -24,11 +22,6 @@ const assets: AssetManifest = {
     url: "/audio/chime.mp3",
     type: AssetType.Audio,
     priority: "background",
-  },
-  webxr: {
-    url: "/textures/webxr.png",
-    type: AssetType.Texture,
-    priority: "critical",
   },
   bass: { url: "/gltf/instruments/bass.glb", type: AssetType.GLTF },
   drums: { url: "/gltf/instruments/drums.glb", type: AssetType.GLTF },
@@ -104,19 +97,6 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   world.visibilityState.subscribe((state) => {
     gridBox.visible = state === VisibilityState.NonImmersive;
   });
-
-  const webxrLogoTexture = AssetManager.getTexture("webxr")!;
-  webxrLogoTexture.colorSpace = SRGBColorSpace;
-  const logoBanner = new Mesh(
-    new PlaneGeometry(3.39, 0.96),
-    new MeshBasicMaterial({
-      map: webxrLogoTexture,
-      transparent: true,
-    }),
-  );
-  world.createTransformEntity(logoBanner);
-  logoBanner.position.set(0, 1, 1.8);
-  logoBanner.rotateY(Math.PI);
 
   // Place instruments in an arc at head height
   const drumsGltf = AssetManager.getGLTF('drums')!;
