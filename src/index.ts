@@ -14,7 +14,8 @@ import {
 } from "@iwsdk/core";
 
 import { PanelSystem } from "./panel.js";
-import { JediForceYankSystem, ClapParticleSystem } from "./jedi-force-yank-gesture.js";
+import { JediForceYankSystem } from "./jedi-force-yank-gesture.js";
+import { ClapParticleSystem } from "./clap-particle-system.js";
 import { InstrumentTag } from "./instrument-select.js";
 import { VolumeDisplaySystem } from "./volume-display.js";
 
