@@ -14,7 +14,7 @@ import {
 } from "@iwsdk/core";
 
 import { PanelSystem } from "./panel.js";
-import { PinchSphereSystem } from "./fist-control-gesture.js";
+import { PinchSphereSystem, ClapParticleSystem } from "./fist-control-gesture.js";
 import { InstrumentTag, InstrumentSelectSystem } from "./instrument-select.js";
 import { VolumeDisplaySystem } from "./volume-display.js";
 
@@ -131,5 +131,5 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   keyboardEntity.addComponent(RayInteractable);
   keyboardEntity.addComponent(InstrumentTag, { trackIndex: 2 });
 
-  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem).registerSystem(InstrumentSelectSystem).registerSystem(VolumeDisplaySystem);
+  world.registerSystem(PanelSystem).registerSystem(PinchSphereSystem).registerSystem(InstrumentSelectSystem).registerSystem(VolumeDisplaySystem).registerSystem(ClapParticleSystem);
 });
