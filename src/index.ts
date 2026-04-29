@@ -98,16 +98,24 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
     gridBox.visible = state === VisibilityState.NonImmersive;
   });
 
+  const hitboxMaterial = new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+
   // Place instruments in an arc at head height
   const drumsGltf = AssetManager.getGLTF('drums')!;
   drumsGltf.scene.position.set(-2, 1.6, -2);
   drumsGltf.scene.rotation.y = Math.PI / 4;
+  const drumsHitbox = new Mesh(new BoxGeometry(1.5, 1.5, 1.5), hitboxMaterial);
+  drumsHitbox.position.set(0, 0.75, 0);
+  drumsGltf.scene.add(drumsHitbox);
   const drumsEntity = world.createTransformEntity(drumsGltf.scene);
   drumsEntity.addComponent(RayInteractable);
   drumsEntity.addComponent(InstrumentTag, { trackIndex: 0 });
 
   const bassGltf = AssetManager.getGLTF('bass')!;
   bassGltf.scene.position.set(0, 1.6, -2.5);
+  const bassHitbox = new Mesh(new BoxGeometry(1.5, 1.5, 1.5), hitboxMaterial);
+  bassHitbox.position.set(0, 0.75, 0);
+  bassGltf.scene.add(bassHitbox);
   const bassEntity = world.createTransformEntity(bassGltf.scene);
   bassEntity.addComponent(RayInteractable);
   bassEntity.addComponent(InstrumentTag, { trackIndex: 1 });
@@ -115,6 +123,9 @@ World.create(document.getElementById("scene-container") as HTMLDivElement, {
   const keyboardGltf = AssetManager.getGLTF('keyboard')!;
   keyboardGltf.scene.position.set(2, 1.6, -2);
   keyboardGltf.scene.rotation.y = -Math.PI / 8;
+  const keyboardHitbox = new Mesh(new BoxGeometry(1.5, 1.5, 1.5), hitboxMaterial);
+  keyboardHitbox.position.set(0, 0.75, 0);
+  keyboardGltf.scene.add(keyboardHitbox);
   const keyboardEntity = world.createTransformEntity(keyboardGltf.scene);
   keyboardEntity.addComponent(RayInteractable);
   keyboardEntity.addComponent(InstrumentTag, { trackIndex: 2 });
