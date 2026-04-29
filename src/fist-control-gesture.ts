@@ -239,6 +239,13 @@ const CLAP_THRESHOLD = 0.22;
 const CLAP_COOLDOWN = 0.9;
 const PARTICLE_SIZE = 0.04;
 
+/** Ableton 0-based track index for clap MIDI output (track 6 in UI). */
+const CLAP_MIDI_TRACK = 5;
+/** MIDI channel (0-based, channel 1). */
+const CLAP_MIDI_CHANNEL = 0;
+/** Minor pentatonic across two octaves — musically safe random notes. */
+const PENTATONIC_NOTES = [48, 51, 53, 55, 58, 60, 63, 65, 67, 70] as const;
+
 const BURST_COLORS: [number, number, number][] = [
   [1.0, 0.97, 0.88],  // cream
   [0.22, 0.22, 0.22], // dark grey
@@ -284,6 +291,11 @@ export class ClapParticleSystem extends createSystem({}) {
   private cooldown = 0;
   private slot = 0;
 
+  /** MIDI note state. */
+  private clapHeld = false;
+  private activeNote = -1;
+  private midiWs!: WebSocket;
+
   init() {
     this.leftPos = new Vector3();
     this.rightPos = new Vector3();
@@ -317,6 +329,26 @@ export class ClapParticleSystem extends createSystem({}) {
       parent: this.world.sceneEntity,
       persistent: true,
     });
+
+    this.midiWs = new WebSocket(WS_URL);
+    this.cleanupFuncs.push(() => {
+      if (this.activeNote >= 0) this.sendNoteOff(this.activeNote);
+      this.midiWs.close();
+    });
+  }
+
+  private sendNoteOn(pitch: number): void {
+    if (this.midiWs.readyState !== WebSocket.OPEN) return;
+    this.midiWs.send(
+      JSON.stringify({ type: 'note_on', track: CLAP_MIDI_TRACK, channel: CLAP_MIDI_CHANNEL, pitch, velocity: 100 }),
+    );
+  }
+
+  private sendNoteOff(pitch: number): void {
+    if (this.midiWs.readyState !== WebSocket.OPEN) return;
+    this.midiWs.send(
+      JSON.stringify({ type: 'note_off', track: CLAP_MIDI_TRACK, channel: CLAP_MIDI_CHANNEL, pitch }),
+    );
   }
 
   private spawn(x: number, y: number, z: number): void {
@@ -352,11 +384,27 @@ export class ClapParticleSystem extends createSystem({}) {
       this.player.gripSpaces.left.getWorldPosition(this.leftPos);
       this.player.gripSpaces.right.getWorldPosition(this.rightPos);
       const close = this.leftPos.distanceTo(this.rightPos) < CLAP_THRESHOLD;
+
+      // Leading edge: hands just came together
       if (close && !this.wasClose && this.cooldown <= 0) {
         this.midPos.addVectors(this.leftPos, this.rightPos).multiplyScalar(0.5);
         this.spawn(this.midPos.x, this.midPos.y, this.midPos.z);
         this.cooldown = CLAP_COOLDOWN;
+
+        // Pick a new random pentatonic note and send MIDI note-on
+        const pitch = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
+        this.activeNote = pitch;
+        this.clapHeld = true;
+        this.sendNoteOn(pitch);
       }
+
+      // Trailing edge: hands just separated
+      if (!close && this.wasClose && this.clapHeld) {
+        this.sendNoteOff(this.activeNote);
+        this.clapHeld = false;
+        this.activeNote = -1;
+      }
+
       this.wasClose = close;
     }
 

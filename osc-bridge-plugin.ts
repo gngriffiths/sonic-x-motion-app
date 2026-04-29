@@ -91,6 +91,28 @@ export function oscBridgePlugin(): Plugin {
               return;
             }
 
+            // MIDI note on: create/replace a clip with the chosen pitch, then fire it
+            // Uses documented AbletonOSC clip API (no /live/track/send_midi_note_on exists)
+            if (msg.type === 'note_on') {
+              const { track, pitch, velocity } = msg as {
+                track: number; pitch: number; velocity: number;
+              };
+              // Delete any existing clip in slot 0, create a fresh 32-beat one, fill it, fire
+              sendOSC('/live/clip_slot/delete_clip', track, 0);
+              sendOSC('/live/clip_slot/create_clip', track, 0, 32);
+              // add/notes: track, clip, pitch, start_time, duration, velocity, mute
+              sendOSC('/live/clip/add/notes', track, 0, pitch, 0, 31.9, velocity, 0);
+              sendOSC('/live/clip/fire', track, 0);
+              return;
+            }
+
+            // MIDI note off: stop the clip
+            if (msg.type === 'note_off') {
+              const { track } = msg as { track: number };
+              sendOSC('/live/clip/stop', track, 0);
+              return;
+            }
+
             // Fist-gesture XYZ control: { hand, track, x, y, z }
             const { hand, track: msgTrack, x, y, z, volume } = msg as { hand: 'left' | 'right'; track: number; x: number; y: number; z: number; volume?: number };
             const track = (msgTrack !== undefined && msgTrack >= 0) ? msgTrack : (hand === 'left' ? 0 : 1);
