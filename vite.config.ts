@@ -50,5 +50,5 @@ export default defineConfig(({ command }) => ({
     esbuildOptions: { target: "esnext" },
   },
   publicDir: "public",
-  base: "./",
+  base: command === "serve" ? "/" : "/sonic-x-motion-app/",
 }));
