@@ -20,8 +20,8 @@ const BLOOM_WINDOW = 1.0;
 /** Duration (seconds) the note plays before auto note-off. */
 const BLOOM_NOTE_DURATION = 2.0;
 const BLOOM_VELOCITY = 100;
-/** Minor pentatonic across two octaves. */
-const PENTATONIC_NOTES = [48, 51, 53, 55, 58, 60, 63, 65, 67, 70] as const;
+/** MIDI note C2. */
+const BLOOM_NOTE = 36;
 
 type BloomPhase = 'idle' | 'armed' | 'playing';
 
@@ -118,7 +118,7 @@ export class BloomGestureSystem extends createSystem({}) {
           // Hand just opened within the window — trigger bloom
           this.player.gripSpaces.left.getWorldPosition(this.handPos);
           particlePool.spawn(this.handPos.x, this.handPos.y, this.handPos.z);
-          this.lActiveNote = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
+          this.lActiveNote = BLOOM_NOTE;
           this.sendNoteOn(this.lActiveNote);
           this.lPhase = 'playing';
           this.lPlayTimer = 0;
@@ -154,7 +154,7 @@ export class BloomGestureSystem extends createSystem({}) {
         if (!fisting && this.rWasFisting) {
           this.player.gripSpaces.right.getWorldPosition(this.handPos);
           particlePool.spawn(this.handPos.x, this.handPos.y, this.handPos.z);
-          this.rActiveNote = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
+          this.rActiveNote = BLOOM_NOTE;
           this.sendNoteOn(this.rActiveNote);
           this.rPhase = 'playing';
           this.rPlayTimer = 0;
