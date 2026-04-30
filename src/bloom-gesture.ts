@@ -1,4 +1,5 @@
-import { createSystem, InputComponent } from "@iwsdk/core";
+import { createSystem, InputComponent, Vector3 } from "@iwsdk/core";
+import { particlePool } from "./particle-pool.js";
 
 const WS_URL = `wss://${window.location.host}/osc-bridge`;
 
@@ -39,9 +40,11 @@ export class BloomGestureSystem extends createSystem({}) {
   private rPlayTimer = 0;
   private rActiveNote = -1;
 
+  private handPos!: Vector3;
   private ws!: WebSocket;
 
   init() {
+    this.handPos = new Vector3();
     this.ws = new WebSocket(WS_URL);
     this.ws.addEventListener('open', () => console.log('[Bloom] OSC bridge connected'));
     this.ws.addEventListener('error', (e) => console.warn('[Bloom] OSC bridge error', e));
@@ -113,6 +116,8 @@ export class BloomGestureSystem extends createSystem({}) {
         this.lArmedTimer += delta;
         if (!fisting && this.lWasFisting) {
           // Hand just opened within the window — trigger bloom
+          this.player.gripSpaces.left.getWorldPosition(this.handPos);
+          particlePool.spawn(this.handPos.x, this.handPos.y, this.handPos.z);
           this.lActiveNote = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
           this.sendNoteOn(this.lActiveNote);
           this.lPhase = 'playing';
@@ -147,6 +152,8 @@ export class BloomGestureSystem extends createSystem({}) {
       if (this.rPhase === 'armed') {
         this.rArmedTimer += delta;
         if (!fisting && this.rWasFisting) {
+          this.player.gripSpaces.right.getWorldPosition(this.handPos);
+          particlePool.spawn(this.handPos.x, this.handPos.y, this.handPos.z);
           this.rActiveNote = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
           this.sendNoteOn(this.rActiveNote);
           this.rPhase = 'playing';
