@@ -91,6 +91,20 @@ export function oscBridgePlugin(): Plugin {
               return;
             }
 
+            // fire_track: fire clip slot 0 on a track (plays whatever clip is there)
+            if (msg.type === 'fire_track') {
+              const { track } = msg as { track: number };
+              sendOSC('/live/clip/fire', track, 0);
+              return;
+            }
+
+            // stop_track: stop clip slot 0 on a track
+            if (msg.type === 'stop_track') {
+              const { track } = msg as { track: number };
+              sendOSC('/live/clip/stop', track, 0);
+              return;
+            }
+
             // MIDI note on: create/replace a clip with the chosen pitch, then fire it
             // Uses documented AbletonOSC clip API (no /live/track/send_midi_note_on exists)
             if (msg.type === 'note_on') {
@@ -102,6 +116,19 @@ export function oscBridgePlugin(): Plugin {
               sendOSC('/live/clip_slot/create_clip', track, 0, 32);
               // add/notes: track, clip, pitch, start_time, duration, velocity, mute
               sendOSC('/live/clip/add/notes', track, 0, pitch, 0, 31.9, velocity, 0);
+              sendOSC('/live/clip/fire', track, 0);
+              return;
+            }
+
+            // play_bar: create a 1-bar (4-beat) non-looping clip, fire once, auto-stops
+            if (msg.type === 'play_bar') {
+              const { track, pitch, velocity } = msg as {
+                track: number; pitch: number; velocity: number;
+              };
+              sendOSC('/live/clip_slot/delete_clip', track, 0);
+              sendOSC('/live/clip_slot/create_clip', track, 0, 4);
+              sendOSC('/live/clip/add/notes', track, 0, pitch, 0, 3.9, velocity, 0);
+              sendOSC('/live/clip/set/looping', track, 0, 0);
               sendOSC('/live/clip/fire', track, 0);
               return;
             }

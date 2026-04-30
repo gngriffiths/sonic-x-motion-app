@@ -6,11 +6,11 @@ const WS_URL = `wss://${window.location.host}/osc-bridge`;
 const CLAP_THRESHOLD = 0.22;
 const CLAP_COOLDOWN = 0.9;
 
-/** Ableton 0-based track index for clap MIDI output (track 6 in UI). */
+/** Ableton 0-based track index for clap output (track 6 in UI). */
 const CLAP_MIDI_TRACK = 5;
-const CLAP_MIDI_CHANNEL = 0;
-/** Minor pentatonic across two octaves — musically safe random notes. */
-const PENTATONIC_NOTES = [48, 51, 53, 55, 58, 60, 63, 65, 67, 70] as const;
+
+/** Seconds after firing before the track is stopped. */
+const CLAP_STOP_DELAY = 1.0;
 
 export class ClapParticleSystem extends createSystem({}) {
   private leftPos!: Vector3;
@@ -19,10 +19,9 @@ export class ClapParticleSystem extends createSystem({}) {
   private camQ!: Quaternion;
   private wasClose = false;
   private cooldown = 0;
+  /** Counts down to zero then stops the track; -1 means inactive. */
+  private stopTimer = -1;
 
-  /** MIDI note state. */
-  private clapHeld = false;
-  private activeNote = -1;
   private midiWs!: WebSocket;
 
   init() {
@@ -34,24 +33,17 @@ export class ClapParticleSystem extends createSystem({}) {
     particlePool.init(this.world);
 
     this.midiWs = new WebSocket(WS_URL);
-    this.cleanupFuncs.push(() => {
-      if (this.activeNote >= 0) this.sendNoteOff(this.activeNote);
-      this.midiWs.close();
-    });
+    this.cleanupFuncs.push(() => this.midiWs.close());
   }
 
-  private sendNoteOn(pitch: number): void {
+  private fireTrack(): void {
     if (this.midiWs.readyState !== WebSocket.OPEN) return;
-    this.midiWs.send(
-      JSON.stringify({ type: 'note_on', track: CLAP_MIDI_TRACK, channel: CLAP_MIDI_CHANNEL, pitch, velocity: 100 }),
-    );
+    this.midiWs.send(JSON.stringify({ type: 'fire_track', track: CLAP_MIDI_TRACK }));
   }
 
-  private sendNoteOff(pitch: number): void {
+  private stopTrack(): void {
     if (this.midiWs.readyState !== WebSocket.OPEN) return;
-    this.midiWs.send(
-      JSON.stringify({ type: 'note_off', track: CLAP_MIDI_TRACK, channel: CLAP_MIDI_CHANNEL, pitch }),
-    );
+    this.midiWs.send(JSON.stringify({ type: 'stop_track', track: CLAP_MIDI_TRACK }));
   }
 
   update(delta: number): void {
@@ -68,20 +60,19 @@ export class ClapParticleSystem extends createSystem({}) {
         this.midPos.addVectors(this.leftPos, this.rightPos).multiplyScalar(0.5);
         particlePool.spawn(this.midPos.x, this.midPos.y, this.midPos.z);
         this.cooldown = CLAP_COOLDOWN;
-
-        const pitch = PENTATONIC_NOTES[Math.floor(Math.random() * PENTATONIC_NOTES.length)];
-        this.activeNote = pitch;
-        this.clapHeld = true;
-        this.sendNoteOn(pitch);
-      }
-
-      if (!close && this.wasClose && this.clapHeld) {
-        this.sendNoteOff(this.activeNote);
-        this.clapHeld = false;
-        this.activeNote = -1;
+        this.stopTimer = CLAP_STOP_DELAY;
+        this.fireTrack();
       }
 
       this.wasClose = close;
+    }
+
+    if (this.stopTimer > 0) {
+      this.stopTimer -= delta;
+      if (this.stopTimer <= 0) {
+        this.stopTimer = -1;
+        this.stopTrack();
+      }
     }
 
     this.camQ.copy(this.world.camera.quaternion);
