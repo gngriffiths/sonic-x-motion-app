@@ -10,10 +10,9 @@ import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
 import { oscBridgePlugin } from "./osc-bridge-plugin.js";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
-    mkcert(),
-    oscBridgePlugin(),
+    ...(command === "serve" ? [mkcert(), oscBridgePlugin()] : []),
     iwsdkDev({
       emulator: {
         device: "metaQuest3",
@@ -52,4 +51,4 @@ export default defineConfig({
   },
   publicDir: "public",
   base: "./",
-});
+}));
